@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Navigation, Zap } from "lucide-react";
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { Loader } from "@googlemaps/js-api-loader";
 
 interface Intersection {
   id: string;
@@ -24,8 +23,8 @@ interface RealTimeMapProps {
 
 const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const map = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<{ [key: string]: google.maps.Marker }>({});
   
   const [intersections, setIntersections] = useState<Intersection[]>([
     {
@@ -74,70 +73,107 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // For demo purposes, using a placeholder token - in production, this should come from environment
-    mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbTJvOW9zMnMwMGUyMmlzb2J4eTU0YXpzIn0.Q6rYOHzMtBmzGUCoiEI1zg';
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-74.0060, 40.7128], // NYC coordinates
-      zoom: 12,
+    const loader = new Loader({
+      apiKey: "AIzaSyBDVT7M3_ELUeQmQdL7QfJx_1H8kVw4-kU", // Demo key - replace with your own
+      version: "weekly",
+      libraries: ["places"]
     });
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl(),
-      'top-right'
-    );
+    loader.load().then(() => {
+      if (!mapContainer.current) return;
+      
+      map.current = new google.maps.Map(mapContainer.current, {
+        center: { lat: 40.7128, lng: -74.0060 }, // NYC coordinates
+        zoom: 12,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        styles: [
+          {
+            featureType: "all",
+            elementType: "geometry.fill",
+            stylers: [{ color: "#f5f5f5" }]
+          },
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ color: "#c9c9c9" }]
+          }
+        ]
+      });
+    }).catch(e => {
+      console.error("Error loading Google Maps:", e);
+      // Fallback: show static map image
+      if (mapContainer.current) {
+        mapContainer.current.innerHTML = `
+          <div class="w-full h-full bg-muted rounded-lg flex items-center justify-center">
+            <div class="text-center">
+              <MapPin class="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
+              <p class="text-muted-foreground">Map unavailable</p>
+              <p class="text-xs text-muted-foreground">Please add your Google Maps API key</p>
+            </div>
+          </div>
+        `;
+      }
+    });
 
     return () => {
-      map.current?.remove();
+      // Google Maps cleanup is handled automatically
     };
   }, []);
 
   // Add/update markers
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || typeof google === 'undefined') return;
 
     // Clear existing markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
+    Object.values(markersRef.current).forEach(marker => marker.setMap(null));
     markersRef.current = {};
 
     intersections.forEach((intersection) => {
-      const markerEl = document.createElement('div');
-      markerEl.className = 'w-6 h-6 cursor-pointer';
-      
       const lightColor = intersection.currentLight === 'red' ? '#ef4444' : 
                         intersection.currentLight === 'yellow' ? '#f59e0b' : '#22c55e';
       
-      markerEl.innerHTML = `
-        <div class="relative">
-          <div class="w-6 h-6 rounded-full border-2 border-white shadow-lg" style="background-color: ${lightColor}"></div>
-          ${intersection.status === 'offline' ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white"></div>' : ''}
-        </div>
-      `;
+      // Create custom marker icon
+      const markerIcon = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: lightColor,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+        scale: 12,
+      };
 
-      const marker = new mapboxgl.Marker(markerEl)
-        .setLngLat([intersection.coordinates.lng, intersection.coordinates.lat])
-        .addTo(map.current!);
+      const marker = new google.maps.Marker({
+        position: { lat: intersection.coordinates.lat, lng: intersection.coordinates.lng },
+        map: map.current,
+        icon: markerIcon,
+        title: intersection.name
+      });
 
       // Add click event
-      markerEl.addEventListener('click', () => {
+      marker.addListener('click', () => {
         onIntersectionSelect(intersection.id);
       });
 
-      // Add popup with intersection info
-      const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`
+      // Add info window
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
           <div class="p-2">
-            <h3 class="font-semibold">${intersection.name}</h3>
-            <p class="text-sm">Vehicles: ${intersection.vehicleCount}</p>
-            <p class="text-sm">Wait Time: ${intersection.waitingTime}s</p>
-            <p class="text-sm">Queue: ${intersection.queueLength}</p>
+            <h3 class="font-semibold text-gray-900">${intersection.name}</h3>
+            <p class="text-sm text-gray-600">Vehicles: ${intersection.vehicleCount}</p>
+            <p class="text-sm text-gray-600">Wait Time: ${intersection.waitingTime}s</p>
+            <p class="text-sm text-gray-600">Queue: ${intersection.queueLength}</p>
+            <div class="mt-1">
+              <span class="inline-block w-3 h-3 rounded-full" style="background-color: ${lightColor}"></span>
+              <span class="text-xs text-gray-500 ml-1">${intersection.currentLight.toUpperCase()}</span>
+            </div>
           </div>
-        `);
+        `
+      });
 
-      marker.setPopup(popup);
+      marker.addListener('click', () => {
+        infoWindow.open(map.current, marker);
+      });
+
       markersRef.current[intersection.id] = marker;
     });
   }, [intersections, onIntersectionSelect]);
