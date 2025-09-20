@@ -6,62 +6,62 @@
 
 @layer base {
   :root {
-    /* Traffic Dashboard Color Palette */
-    --background: 205 81% 21%;          /* Dark blue base #0B3C5D */
-    --foreground: 210 40% 98%;          /* Light text */
+    /* Professional Dashboard Color Palette */
+    --background: 210 16% 98%;          /* Light professional background */
+    --foreground: 222 84% 5%;           /* Dark text */
 
-    --card: 205 81% 23%;                /* Slightly lighter card background */
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;                  /* White card background */
+    --card-foreground: 222 84% 5%;
 
-    --popover: 205 81% 19%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 84% 5%;
 
-    --primary: 20 100% 63%;             /* Orange accent #FF8C42 */
-    --primary-foreground: 205 81% 21%;
+    --primary: 221 83% 53%;             /* Professional blue #3B82F6 */
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 205 60% 35%;           /* Medium blue for secondary elements */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;           /* Light gray for secondary elements */
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 205 50% 30%;               /* Muted blue for disabled states */
-    --muted-foreground: 210 20% 70%;
+    --muted: 210 40% 96%;               /* Light muted background */
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 20 100% 63%;              /* Orange accent same as primary */
-    --accent-foreground: 205 81% 21%;
+    --accent: 210 40% 96%;              /* Subtle accent */
+    --accent-foreground: 222 47% 11%;
 
-    --success: 142 71% 45%;             /* Green for success states */
-    --success-foreground: 210 40% 98%;
+    --success: 142 76% 36%;             /* Professional green */
+    --success-foreground: 355 7% 97%;
 
-    --warning: 45 93% 47%;              /* Yellow for warnings */
-    --warning-foreground: 205 81% 21%;
+    --warning: 32 95% 44%;              /* Professional orange */
+    --warning-foreground: 210 40% 98%;
 
     --destructive: 0 84% 60%;           /* Red for danger */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 205 60% 35%;
-    --input: 205 60% 30%;
-    --ring: 20 100% 63%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Traffic Light Colors */
     --traffic-red: 0 84% 60%;
     --traffic-yellow: 45 93% 47%;
-    --traffic-green: 142 71% 45%;
+    --traffic-green: 142 76% 36%;
 
     /* Dashboard Specific Colors */
-    --dashboard-header: 205 81% 18%;
-    --dashboard-sidebar: 205 81% 19%;
-    --dashboard-panel: 205 81% 23%;
+    --dashboard-header: 0 0% 100%;
+    --dashboard-sidebar: 0 0% 100%;
+    --dashboard-panel: 0 0% 100%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(205 81% 21%), hsl(205 60% 35%));
-    --gradient-accent: linear-gradient(135deg, hsl(20 100% 63%), hsl(30 100% 58%));
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(239 84% 67%));
+    --gradient-accent: linear-gradient(135deg, hsl(32 95% 44%), hsl(43 96% 56%));
     --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(10 84% 55%));
     
     /* Shadows */
-    --shadow-panel: 0 4px 12px hsl(205 81% 15% / 0.3);
-    --shadow-elevated: 0 8px 25px hsl(205 81% 10% / 0.4);
-    --shadow-glow: 0 0 20px hsl(20 100% 63% / 0.3);
+    --shadow-panel: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-elevated: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
+    --shadow-glow: 0 0 20px hsl(221 83% 53% / 0.3);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

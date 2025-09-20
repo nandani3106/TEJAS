@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import TrafficMap from "@/components/dashboard/TrafficMap";
+import RealTimeMap from "@/components/dashboard/RealTimeMap";
 import LiveMetrics from "@/components/dashboard/LiveMetrics";
+import PeakHours from "@/components/dashboard/PeakHours";
 import CameraFeeds from "@/components/dashboard/CameraFeeds";
 import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import ManualControls from "@/components/dashboard/ManualControls";
@@ -27,7 +28,7 @@ const Index = () => {
         {/* Top Row - Map and Live Metrics */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <TrafficMap 
+            <RealTimeMap 
               selectedIntersection={selectedIntersection}
               onIntersectionSelect={setSelectedIntersection}
             />
@@ -37,7 +38,12 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Middle Row - Camera Feeds and Alerts */}
+        {/* Second Row - Peak Hours */}
+        <div className="grid grid-cols-1 gap-6">
+          <PeakHours />
+        </div>
+
+        {/* Third Row - Camera Feeds and Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <CameraFeeds selectedIntersection={selectedIntersection} />
           <AlertsPanel />
