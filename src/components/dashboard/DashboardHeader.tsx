@@ -32,8 +32,8 @@ const DashboardHeader = ({ activeAlerts }: DashboardHeaderProps) => {
                 <MapPin className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">TrafficFlow AI</h1>
-                <p className="text-sm text-muted-foreground">Real-Time Traffic Management</p>
+                <h1 className="text-xl font-bold text-foreground">Pravaha</h1>
+                <p className="text-sm text-muted-foreground">The Next Gen Transit</p>
               </div>
             </div>
           </div>
