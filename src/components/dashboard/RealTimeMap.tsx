@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { MapPin, Navigation, Zap } from "lucide-react";
-import { Loader } from "@googlemaps/js-api-loader";
+import cityMapImage from "@/assets/city-map.jpg";
 
 interface Intersection {
   id: string;
   name: string;
-  coordinates: { lat: number; lng: number };
+  position: { x: number; y: number }; // Percentage position on the image
   currentLight: 'red' | 'yellow' | 'green';
   vehicleCount: number;
   waitingTime: number;
@@ -22,15 +21,11 @@ interface RealTimeMapProps {
 }
 
 const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<{ [key: string]: google.maps.Marker }>({});
-  
   const [intersections, setIntersections] = useState<Intersection[]>([
     {
       id: "INT001",
       name: "Main St & 1st Ave",
-      coordinates: { lat: 40.7128, lng: -74.0060 },
+      position: { x: 25, y: 30 },
       currentLight: 'green',
       vehicleCount: 12,
       waitingTime: 45,
@@ -40,7 +35,7 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
     {
       id: "INT002", 
       name: "Broadway & 42nd St",
-      coordinates: { lat: 40.7589, lng: -73.9851 },
+      position: { x: 60, y: 40 },
       currentLight: 'red',
       vehicleCount: 28,
       waitingTime: 120,
@@ -50,7 +45,7 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
     {
       id: "INT003",
       name: "5th Ave & Central Park",
-      coordinates: { lat: 40.7831, lng: -73.9712 },
+      position: { x: 75, y: 25 },
       currentLight: 'yellow',
       vehicleCount: 19,
       waitingTime: 78,
@@ -60,7 +55,7 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
     {
       id: "INT004",
       name: "Wall St & Water St", 
-      coordinates: { lat: 40.7074, lng: -74.0113 },
+      position: { x: 40, y: 70 },
       currentLight: 'green',
       vehicleCount: 7,
       waitingTime: 30,
@@ -68,115 +63,6 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
       status: 'offline'
     }
   ]);
-
-  // Initialize map
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const loader = new Loader({
-      apiKey: "AIzaSyBDVT7M3_ELUeQmQdL7QfJx_1H8kVw4-kU", // Demo key - replace with your own
-      version: "weekly",
-      libraries: ["places"]
-    });
-
-    loader.load().then(() => {
-      if (!mapContainer.current) return;
-      
-      map.current = new google.maps.Map(mapContainer.current, {
-        center: { lat: 40.7128, lng: -74.0060 }, // NYC coordinates
-        zoom: 12,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        styles: [
-          {
-            featureType: "all",
-            elementType: "geometry.fill",
-            stylers: [{ color: "#f5f5f5" }]
-          },
-          {
-            featureType: "water",
-            elementType: "geometry",
-            stylers: [{ color: "#c9c9c9" }]
-          }
-        ]
-      });
-    }).catch(e => {
-      console.error("Error loading Google Maps:", e);
-      // Fallback: show static map image
-      if (mapContainer.current) {
-        mapContainer.current.innerHTML = `
-          <div class="w-full h-full bg-muted rounded-lg flex items-center justify-center">
-            <div class="text-center">
-              <MapPin class="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
-              <p class="text-muted-foreground">Map unavailable</p>
-              <p class="text-xs text-muted-foreground">Please add your Google Maps API key</p>
-            </div>
-          </div>
-        `;
-      }
-    });
-
-    return () => {
-      // Google Maps cleanup is handled automatically
-    };
-  }, []);
-
-  // Add/update markers
-  useEffect(() => {
-    if (!map.current || typeof google === 'undefined') return;
-
-    // Clear existing markers
-    Object.values(markersRef.current).forEach(marker => marker.setMap(null));
-    markersRef.current = {};
-
-    intersections.forEach((intersection) => {
-      const lightColor = intersection.currentLight === 'red' ? '#ef4444' : 
-                        intersection.currentLight === 'yellow' ? '#f59e0b' : '#22c55e';
-      
-      // Create custom marker icon
-      const markerIcon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        fillColor: lightColor,
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 2,
-        scale: 12,
-      };
-
-      const marker = new google.maps.Marker({
-        position: { lat: intersection.coordinates.lat, lng: intersection.coordinates.lng },
-        map: map.current,
-        icon: markerIcon,
-        title: intersection.name
-      });
-
-      // Add click event
-      marker.addListener('click', () => {
-        onIntersectionSelect(intersection.id);
-      });
-
-      // Add info window
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div class="p-2">
-            <h3 class="font-semibold text-gray-900">${intersection.name}</h3>
-            <p class="text-sm text-gray-600">Vehicles: ${intersection.vehicleCount}</p>
-            <p class="text-sm text-gray-600">Wait Time: ${intersection.waitingTime}s</p>
-            <p class="text-sm text-gray-600">Queue: ${intersection.queueLength}</p>
-            <div class="mt-1">
-              <span class="inline-block w-3 h-3 rounded-full" style="background-color: ${lightColor}"></span>
-              <span class="text-xs text-gray-500 ml-1">${intersection.currentLight.toUpperCase()}</span>
-            </div>
-          </div>
-        `
-      });
-
-      marker.addListener('click', () => {
-        infoWindow.open(map.current, marker);
-      });
-
-      markersRef.current[intersection.id] = marker;
-    });
-  }, [intersections, onIntersectionSelect]);
 
   // Simulate real-time updates
   useEffect(() => {
@@ -203,9 +89,9 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
 
   const getLightColorClass = (light: string) => {
     switch (light) {
-      case 'red': return 'traffic-light-red';
-      case 'yellow': return 'traffic-light-yellow';
-      case 'green': return 'traffic-light-green';
+      case 'red': return 'bg-red-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'green': return 'bg-green-500';
       default: return 'bg-muted';
     }
   };
@@ -220,7 +106,7 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
   };
 
   return (
-    <Card className="bg-dashboard-panel panel-shadow">
+    <Card className="bg-card border">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
@@ -236,12 +122,31 @@ const RealTimeMap = ({ selectedIntersection, onIntersectionSelect }: RealTimeMap
       <CardContent>
         {/* Map Container */}
         <div className="rounded-lg overflow-hidden h-96 relative">
-          <div ref={mapContainer} className="w-full h-full" />
+          <img 
+            src={cityMapImage} 
+            alt="City Traffic Map"
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Traffic Intersection Markers */}
+          {intersections.map((intersection) => (
+            <button
+              key={intersection.id}
+              onClick={() => onIntersectionSelect(intersection.id)}
+              className={`absolute w-6 h-6 rounded-full border-2 border-white shadow-lg transition-all hover:scale-110 ${getLightColorClass(intersection.currentLight)} ${selectedIntersection === intersection.id ? 'ring-2 ring-primary' : ''}`}
+              style={{
+                left: `${intersection.position.x}%`,
+                top: `${intersection.position.y}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+              title={intersection.name}
+            />
+          ))}
         </div>
 
         {/* Selected Intersection Details */}
         {selectedIntersection && (
-          <div className="mt-4 p-4 bg-secondary/20 rounded-lg border">
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
             {(() => {
               const selected = intersections.find(i => i.id === selectedIntersection);
               if (!selected) return null;
